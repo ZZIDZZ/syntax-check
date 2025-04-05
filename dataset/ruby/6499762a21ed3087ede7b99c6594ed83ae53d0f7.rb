@@ -1,0 +1,43 @@
+def encode data, opcode=TEXT_FRAME
+      frame = []
+      frame << (opcode | 0x80)
+
+      packr = "CC"
+
+      if opcode == TEXT_FRAME
+        data.force_encoding("UTF-8")
+
+        if !data.valid_encoding?
+          raise "Invalid UTF!"
+        end
+      end
+
+      # append frame length and mask bit 0x80
+      len = data ? data.bytesize : 0
+      if len <= 125
+        frame << (len | 0x80)
+      elsif len < 65536
+        frame << (126 | 0x80)
+        frame << len
+        packr << "n"
+      else
+        frame << (127 | 0x80)
+        frame << len
+        packr << "L!>"
+      end
+
+      # generate a masking key
+      key = rand(2 ** 31)
+
+      # mask each byte with the key
+      frame << key
+      packr << "N"
+
+      #puts "op #{opcode} len #{len} bytes #{data}"
+      # Apply the masking key to every byte
+      len.times do |i|
+        frame << ((data.getbyte(i) ^ (key >> ((3 - (i % 4)) * 8))) & 0xFF)
+      end
+
+      frame.pack("#{packr}C*")
+    end
