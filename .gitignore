@@ -3,3 +3,4 @@ dataset_ast_sim_wit
 codexglue
 .venv
 *.zip
+dataset/go/*.go
